@@ -20,7 +20,7 @@
     // Initial Apply
     applyTheme(currentTheme);
 
-    const API_BASE = "";
+    const API_BASE = "https://ansh-09-nutrivision-backend.hf.space";
 
     // DOM References
     const uploadArea = document.getElementById("upload-area");
