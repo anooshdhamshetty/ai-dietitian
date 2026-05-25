@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NutriVision 🥗</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="/static/styles.css" />
+</head>
+
+<body>
+    <div class="glow-bg"></div>
+    <div id="bg-food-image" class="bg-image-container"></div>
+    <div class="theme-toggle-floating" id="theme-toggle-btn" title="Toggle Theme">
+        🌓
+    </div>
+
+    <div class="floating-blobs">
+        <div class="blob blob-1"></div>
+        <div class="blob blob-2"></div>
+        <div class="blob blob-3"></div>
+    </div>
+
+    <nav class="navbar">
+        <div class="nav-brand">NutriVision 🥗</div>
+
+        <input type="checkbox" id="nav-toggle" class="nav-toggle" hidden />
+        <label for="nav-toggle" class="nav-toggle-label">
+            <span></span>
+        </label>
+
+        <div class="nav-links">
+            <a href="#analyze" class="nav-link active">Analyze</a>
+            <a href="#dashboard" class="nav-link">Dashboard</a>
+            <a href="#history" class="nav-link">History</a>
+            <a href="#profile" class="nav-link" id="nav-profile-link" title="Profile">
+                <img id="nav-profile-pic" class="avatar-small"
+                    src="https://ui-avatars.com/api/?name=User&background=random" alt="Profile"
+                    style="margin-right: 0;" />
+            </a>
+        </div>
+    </nav>
+
+    <main class="container fade-in">
+        <section id="analyze" class="section">
+            <div class="hero-header">
+                <div class="hero-glow"></div>
+                <h1 class="hero-title">Know What You Eat, <span class="gradient-text">Instantly.</span></h1>
+                <p class="hero-subtitle">Upload a photo of your meal. Our AI will detect everything, estimate portions,
+                    and calculate precise macros.</p>
+            </div>
+
+            <div class="upload-card">
+                <div id="upload-area" class="upload-area">
+                    <input type="file" id="file-input" accept="image/*" hidden />
+
+                    <div id="upload-placeholder" class="upload-placeholder">
+                        <svg class="upload-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                            stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                                d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        </svg>
+                        <p class="upload-title">Click or drag image to upload</p>
+                        <p class="upload-hint">Supports JPG, PNG, WEBP</p>
+                    </div>
+
+                    <div id="preview-container" class="preview-container" style="display: none;">
+                        <canvas id="preview-canvas" class="preview-canvas"></canvas>
+                        <button id="remove-btn" class="remove-btn">✕</button>
+                    </div>
+                </div>
+
+                <div class="portion-card" id="portion-card">
+                    <div class="mode-toggle-container" style="margin-bottom: 1.5rem;">
+                        <div class="mode-toggle" id="portion-mode-toggle">
+                            <button class="mode-btn active" data-mode="ai">⚡ AI Mode</button>
+                            <button class="mode-btn" data-mode="manual">🎛 Manual Mode</button>
+                        </div>
+                    </div>
+                    <div class="portion-header">
+                        <div style="display: flex; flex-direction: column;">
+                            <span class="portion-title">⚖️ Estimate Portion Size</span>
+                            <span id="auto-estimate-label" style="font-size: 0.75rem; color: #a78bfa; font-weight: 600; margin-top: 2px;">Auto-estimated ✨</span>
+                        </div>
+                        <span class="portion-value" id="portion-value">250g</span>
+                    </div>
+                    <div class="portion-controls">
+                        <select id="portion-preset" class="portion-select" style="opacity: 0.5;" disabled>
+                            <option value="150">Small Bowl (~150g)</option>
+                            <option value="250" selected>Medium Bowl (~250g)</option>
+                            <option value="350">Large Bowl (~350g)</option>
+                        </select>
+                        <input type="range" id="portion-slider" class="portion-slider" min="50" max="600" step="10"
+                            value="250" style="opacity: 0.5;" disabled />
+                    </div>
+                </div>
+
+                <div class="action-row">
+                    <button id="analyze-btn" class="btn-primary" disabled>
+                        <svg id="btn-loader" class="btn-loader spinner" style="display: none;"
+                            xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4">
+                            </circle>
+                            <path class="opacity-75" fill="currentColor"
+                                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+                            </path>
+                        </svg>
+                        <span class="btn-label">Analyze Food</span>
+                    </button>
+                </div>
+            </div>
+
+            <div id="results-panel" class="results-panel" style="display: none;">
+                <h2 class="section-heading">Results</h2>
+
+                <div id="analysis-loader" class="skeleton-loader" style="display: none;">
+                    <div class="skeleton-card"></div>
+                    <div class="skeleton-card"></div>
+                    <div class="skeleton-card"></div>
+                </div>
+
+                <div id="results-cards" class="results-grid"></div>
+                <div id="results-total" class="results-total"></div>
+
+                <div id="calorie-feedback" class="feedback-msg" style="display: none;"></div>
+
+                <div class="calorie-meter-container" style="margin-top: 1.5rem; display: none;"
+                    id="calorie-meter-container">
+                    <span
+                        style="font-size: 0.85rem; color: var(--clr-text-muted); display: block; margin-bottom: 0.5rem; font-weight: 500;">Calorie
+                        Intensity</span>
+                    <div class="calorie-meter">
+                        <div id="calorie-meter-fill" class="meter-fill"></div>
+                    </div>
+                </div>
+
+                <div class="action-row mt-4">
+                    <button id="save-btn" class="btn-secondary">Save to Dashboard</button>
+                </div>
+            </div>
+        </section>
+
+        <section id="dashboard" class="section">
+            <h2 class="section-heading">Daily Dashboard</h2>
+            <div class="dashboard-grid">
+                <div class="dash-card">
+                    <h3 class="dash-card-title">Weekly Analytics (Last 7 Days)</h3>
+                    <div class="chart-container" style="position: relative; height:220px; width:100%">
+                        <canvas id="weekly-chart"></canvas>
+                    </div>
+                </div>
+
+                <div class="dash-card goals-card">
+                    <h3 class="dash-card-title">💪 Macro Progress</h3>
+                    <div class="macro-bars">
+                        <div class="macro-bar-group">
+                            <div class="macro-bar-labels">
+                                <span>Calories <small id="rem-calories"
+                                        style="font-weight:normal; margin-left:8px; color:var(--clr-text-muted);"></small></span>
+                                <span id="total-calories" class="fw-bold clr-cal">0</span>
+                            </div>
+                            <div class="progress-track">
+                                <div id="bar-calories" class="progress-fill fill-cal" style="width: 0%"></div>
+                            </div>
+                        </div>
+                        <div class="macro-bar-group">
+                            <div class="macro-bar-labels">
+                                <span>Protein <small id="rem-protein"
+                                        style="font-weight:normal; margin-left:8px; color:var(--clr-text-muted);"></small></span>
+                                <span id="total-protein" class="fw-bold clr-pro">0g</span>
+                            </div>
+                            <div class="progress-track">
+                                <div id="bar-protein" class="progress-fill fill-pro" style="width: 0%"></div>
+                            </div>
+                        </div>
+                        <div class="macro-bar-group">
+                            <div class="macro-bar-labels">
+                                <span>Carbs</span>
+                                <span id="total-carbs" class="fw-bold clr-carb">0g</span>
+                            </div>
+                            <div class="progress-track">
+                                <div id="bar-carbs" class="progress-fill fill-carb" style="width: 0%"></div>
+                            </div>
+                        </div>
+                        <div class="macro-bar-group">
+                            <div class="macro-bar-labels">
+                                <span>Fat</span>
+                                <span id="total-fats" class="fw-bold clr-fat">0g</span>
+                            </div>
+                            <div class="progress-track">
+                                <div id="bar-fats" class="progress-fill fill-fat" style="width: 0%"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="ai-feedback-container" class="mt-4"
+                        style="display: none; padding-top: 1rem; border-top: 1px solid var(--clr-border);">
+                        <h4 style="font-size: 0.9rem; margin-bottom: 0.5rem; color: var(--clr-text-muted);">AI Feedback
+                        </h4>
+                        <div id="ai-feedback-calories" style="margin-bottom: 0.25rem; font-weight: 500;"></div>
+                        <div id="ai-feedback-protein" style="font-weight: 500;"></div>
+                    </div>
+                </div>
+
+                <div class="dash-card">
+                    <h3 class="dash-card-title">⚡ Meals Logged Today</h3>
+                    <div id="meals-list" class="meals-list">
+                        <div class="empty-state">No meals logged yet today.</div>
+                    </div>
+                </div>
+
+                <!-- Meal Swap Suggestion Widget (Moved to end) -->
+                <div class="dash-card swap-suggestion-card" id="swap-suggestion-card">
+                    <h3 class="dash-card-title" style="color: var(--clr-primary); display: flex; align-items: center; gap: 0.5rem;">
+                        <span>🔁</span> Smart Suggestions
+                    </h3>
+                    <div id="swap-suggestion-content" class="swap-content">
+                        <div class="empty-state" style="padding: 1rem 0;">Log a meal to see suggestions!</div>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <section id="history" class="section">
+            <h2 class="section-heading">All History</h2>
+
+            <div class="history-controls"
+                style="margin-bottom: 1.5rem; display: flex; gap: 1rem; align-items: center; flex-wrap: wrap;">
+                <select id="history-filter-range" class="form-input" style="width: auto;">
+                    <option value="all">All History</option>
+                    <option value="today">Today</option>
+                    <option value="7days">Last 7 Days</option>
+                    <option value="custom">Custom Date</option>
+                </select>
+                <input type="date" id="history-filter-date" class="form-input" style="display: none; width: auto;" />
+            </div>
+            <div class="history-card">
+                <div id="history-list" class="history-list">
+                    <div class="empty-state">No history recorded.</div>
+                </div>
+            </div>
+        </section>
+
+        <section id="profile" class="section" style="display: none;">
+            <h2 class="section-heading">User Profile</h2>
+
+            <div class="profile-pic-container">
+                <div class="profile-pic-wrapper">
+                    <img id="profile-pic-img" class="avatar-large"
+                        src="https://ui-avatars.com/api/?name=User&background=random" alt="Profile" />
+                    <div class="profile-pic-overlay" id="upload-pic-btn">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                        </svg>
+                    </div>
+                </div>
+                <input type="file" id="profile-pic-input" accept="image/*" style="display: none;" />
+            </div>
+
+            <p id="profile-greeting"
+                style="text-align: center; margin-bottom: 1.5rem; color: var(--clr-text-muted); font-size: 1.1rem;"></p>
+
+            <!-- Section 1: Profile Info -->
+            <div class="dash-card" style="max-width: 500px; margin: 0 auto 1.5rem;">
+                <h3 class="dash-card-title">👤 Profile Info</h3>
+                <div class="form-group">
+                    <label>Name</label>
+                    <input type="text" id="profile-name" class="form-input" placeholder="Your name">
+                </div>
+                <div class="form-group">
+                    <label>Email</label>
+                    <input type="text" id="profile-email" class="form-input" disabled
+                        style="background-color: rgba(255, 255, 255, 0.05); color: var(--clr-text-muted);">
+                </div>
+                <div class="form-row" style="margin-bottom: 1.5rem;">
+                    <div class="form-group">
+                        <label>Weight (kg)</label>
+                        <input type="number" id="profile-weight" class="form-input" placeholder="e.g. 70" step="0.1"
+                            min="0">
+                    </div>
+                    <div class="form-group">
+                        <label>Height (cm)</label>
+                        <input type="number" id="profile-height" class="form-input" placeholder="e.g. 175" step="0.1"
+                            min="0">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Section 2: Goals -->
+            <div class="dash-card" style="max-width: 500px; margin: 0 auto 1.5rem;">
+                <h3 class="dash-card-title">🎯 Daily Goals</h3>
+                <div class="form-group">
+                    <label>Calorie Goal (kcal)</label>
+                    <input type="number" id="profile-calories-input" class="form-input" value="2500">
+                </div>
+                <div class="form-group">
+                    <label>Protein Goal (g)</label>
+                    <input type="number" id="profile-protein-input" class="form-input" value="100">
+                </div>
+            </div>
+
+            <!-- Save Profile Button -->
+            <div style="max-width: 500px; margin: 0 auto 1.5rem;">
+                <button id="profile-save-goals-btn" class="btn-primary" style="width:100%; justify-content:center;">Save
+                    Profile</button>
+            </div>
+
+            <!-- Section 3: Change Password -->
+            <div class="dash-card" style="max-width: 500px; margin: 0 auto 1.5rem;">
+                <h3 class="dash-card-title">🔒 Change Password</h3>
+                <div class="form-group">
+                    <label>Current Password</label>
+                    <input type="password" id="profile-old-password" class="form-input"
+                        placeholder="Enter current password" autocomplete="current-password">
+                </div>
+                <div class="form-group">
+                    <label>New Password</label>
+                    <input type="password" id="profile-new-password" class="form-input" placeholder="Enter new password"
+                        autocomplete="new-password">
+                </div>
+                <div id="password-msg"
+                    style="display:none; margin-bottom:1rem; padding:0.75rem; border-radius:var(--radius-sm); font-size:0.9rem; font-weight:500;">
+                </div>
+                <button id="profile-change-pw-btn" class="btn-secondary"
+                    style="width:100%; justify-content:center;">Change Password</button>
+            </div>
+
+            <!-- Logout -->
+            <div style="max-width: 500px; margin: 0 auto;">
+                <button id="profile-logout-btn" class="btn-secondary"
+                    style="width:100%; justify-content:center; border: 1px solid #ff6b6b; color: #ff6b6b; background: rgba(255, 107, 107, 0.1);">Logout</button>
+            </div>
+        </section>
+
+        <section id="auth" class="section">
+            <h2 class="section-heading text-center">Welcome to NutriVision</h2>
+            <div class="auth-container">
+                <div class="auth-card" id="login-card">
+                    <h3 class="dash-card-title text-center">Login</h3>
+                    <form id="login-form">
+                        <div class="form-group">
+                            <label>Email</label>
+                            <input type="email" id="login-email" required class="form-input" autocomplete="email">
+                        </div>
+                        <div class="form-group">
+                            <label>Password</label>
+                            <input type="password" id="login-password" required class="form-input"
+                                autocomplete="current-password">
+                        </div>
+                        <div class="action-row" style="margin-top: 1.5rem;">
+                            <button type="submit" class="btn-primary"
+                                style="width: 100%; justify-content: center;">Login</button>
+                        </div>
+                    </form>
+                    <p class="auth-switch">Don't have an account? <a id="show-signup">Sign up</a></p>
+                </div>
+
+                <div class="auth-card" id="signup-card" style="display: none;">
+                    <h3 class="dash-card-title text-center">Sign Up</h3>
+                    <form id="signup-form">
+                        <div class="form-group">
+                            <label>Email</label>
+                            <input type="email" id="signup-email" required class="form-input" autocomplete="email">
+                        </div>
+                        <div class="form-group">
+                            <label>Password</label>
+                            <input type="password" id="signup-password" required class="form-input"
+                                autocomplete="new-password">
+                        </div>
+                        <div class="action-row" style="margin-top: 1.5rem;">
+                            <button type="submit" class="btn-primary" style="width: 100%; justify-content: center;">Sign
+                                Up</button>
+                        </div>
+                    </form>
+                    <p class="auth-switch">Already have an account? <a id="show-login">Login</a></p>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script src="/static/app.js"></script>
+</body>
+
+</html>

@@ -1,0 +1,46 @@
+# NutriVision — Python Dependencies
+# ==================================
+# Install ALL dependencies before running:
+#   pip install -r requirements.txt
+#
+# On Windows with a venv:
+#   .venv\Scripts\pip install -r requirements.txt
+#
+# Minimum Python version: 3.10
+
+# ── Web framework ────────────────────────────────────────────────
+fastapi==0.115.0
+uvicorn[standard]==0.30.0
+python-multipart==0.0.9      # required for file uploads (UploadFile)
+
+# ── Database ─────────────────────────────────────────────────────
+sqlalchemy>=2.0.50           # Updated for Python 3.13 compatibility
+psycopg2-binary==2.9.9       # PostgreSQL adapter (for production)
+supabase==2.4.4              # Supabase (PostgreSQL + REST API + Auth)
+python-dotenv==1.0.1         # Environment variable management
+# ── Data validation ──────────────────────────────────────────────
+pydantic[email]>=2.0.0       # [email] extra pulls email-validator automatically
+email-validator==2.1.1       # explicit pin — used by Pydantic's EmailStr
+
+# ── Image processing ─────────────────────────────────────────────
+Pillow==10.4.0
+numpy==1.26.4
+
+# ── AI / ML — YOLOv8 ─────────────────────────────────────────────
+ultralytics==8.2.0
+
+# ── AI / ML — Food101 ViT classifier ─────────────────────────────
+transformers>=4.40.0
+torch>=2.1.0
+torchvision>=0.16.0
+
+# ── LLM Integration — Groq ───────────────────────────────────────
+groq>=0.5.0                  # NEW: Groq API client for fast LLM inference
+
+# ── Authentication ────────────────────────────────────────────────
+passlib[bcrypt]==1.7.4
+python-jose[cryptography]==3.3.0
+
+# ── Environment & Config ──────────────────────────────────────────
+pydantic-settings>=2.0.0     # Pydantic v2 settings management
+huggingface-hub==0.23.0

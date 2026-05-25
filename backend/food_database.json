@@ -1,0 +1,348 @@
+{
+    "_comment": "NutriVision — Food Nutrition & Density Database. Macros are per 100g. density is g/cm³ for volume→weight. depth_cm is assumed food thickness for 2D mask estimation. default_weight_g is a fallback.",
+
+    "_default": {
+        "calories_per_100g": 150,
+        "protein_per_100g":  5.0,
+        "carbs_per_100g":    20.0,
+        "fat_per_100g":      5.0,
+        "density":           0.9,
+        "depth_cm":          1.5,
+        "default_weight_g":  150
+    },
+
+    "rice": {
+        "calories_per_100g": 130,
+        "protein_per_100g":  2.7,
+        "carbs_per_100g":    28.2,
+        "fat_per_100g":      0.3,
+        "density":           1.1,
+        "depth_cm":          2.0,
+        "default_weight_g":  200
+    },
+    "chicken_curry": {
+        "calories_per_100g": 165,
+        "protein_per_100g":  15.0,
+        "carbs_per_100g":    7.0,
+        "fat_per_100g":      9.0,
+        "density":           1.0,
+        "depth_cm":          2.5,
+        "default_weight_g":  180
+    },
+    "salad": {
+        "calories_per_100g": 20,
+        "protein_per_100g":  1.5,
+        "carbs_per_100g":    3.5,
+        "fat_per_100g":      0.2,
+        "density":           0.4,
+        "depth_cm":          3.0,
+        "default_weight_g":  100
+    },
+    "chapati": {
+        "calories_per_100g": 297,
+        "protein_per_100g":  8.7,
+        "carbs_per_100g":    49.9,
+        "fat_per_100g":      7.5,
+        "density":           0.7,
+        "depth_cm":          0.5,
+        "default_weight_g":  40
+    },
+    "dal": {
+        "calories_per_100g": 104,
+        "protein_per_100g":  6.3,
+        "carbs_per_100g":    12.4,
+        "fat_per_100g":      3.5,
+        "density":           1.05,
+        "depth_cm":          2.5,
+        "default_weight_g":  200
+    },
+    "egg": {
+        "calories_per_100g": 155,
+        "protein_per_100g":  13.0,
+        "carbs_per_100g":    1.1,
+        "fat_per_100g":      11.0,
+        "density":           1.03,
+        "depth_cm":          2.0,
+        "default_weight_g":  60
+    },
+    "banana": {
+        "calories_per_100g": 89,
+        "protein_per_100g":  1.1,
+        "carbs_per_100g":    22.8,
+        "fat_per_100g":      0.3,
+        "density":           0.95,
+        "depth_cm":          3.0,
+        "default_weight_g":  120
+    },
+    "apple": {
+        "calories_per_100g": 52,
+        "protein_per_100g":  0.3,
+        "carbs_per_100g":    13.8,
+        "fat_per_100g":      0.2,
+        "density":           0.85,
+        "depth_cm":          4.0,
+        "default_weight_g":  180
+    },
+    "pizza": {
+        "calories_per_100g": 266,
+        "protein_per_100g":  11.0,
+        "carbs_per_100g":    33.0,
+        "fat_per_100g":      10.0,
+        "density":           0.8,
+        "depth_cm":          1.2,
+        "default_weight_g":  125
+    },
+    "burger": {
+        "calories_per_100g": 295,
+        "protein_per_100g":  17.0,
+        "carbs_per_100g":    24.0,
+        "fat_per_100g":      14.0,
+        "density":           0.75,
+        "depth_cm":          6.0,
+        "default_weight_g":  200
+    },
+    "french_fries": {
+        "calories_per_100g": 312,
+        "protein_per_100g":  3.4,
+        "carbs_per_100g":    41.0,
+        "fat_per_100g":      15.0,
+        "density":           0.55,
+        "depth_cm":          3.0,
+        "default_weight_g":  120
+    },
+    "pasta": {
+        "calories_per_100g": 131,
+        "protein_per_100g":  5.0,
+        "carbs_per_100g":    25.0,
+        "fat_per_100g":      1.1,
+        "density":           1.05,
+        "depth_cm":          2.0,
+        "default_weight_g":  220
+    },
+    "sandwich": {
+        "calories_per_100g": 250,
+        "protein_per_100g":  10.0,
+        "carbs_per_100g":    28.0,
+        "fat_per_100g":      11.0,
+        "density":           0.65,
+        "depth_cm":          5.0,
+        "default_weight_g":  180
+    },
+    "idli": {
+        "calories_per_100g": 58,
+        "protein_per_100g":  2.0,
+        "carbs_per_100g":    12.0,
+        "fat_per_100g":      0.1,
+        "density":           0.65,
+        "depth_cm":          2.0,
+        "default_weight_g":  40
+    },
+    "dosa": {
+        "calories_per_100g": 168,
+        "protein_per_100g":  3.9,
+        "carbs_per_100g":    27.1,
+        "fat_per_100g":      4.8,
+        "density":           0.55,
+        "depth_cm":          0.4,
+        "default_weight_g":  100
+    },
+    "biryani": {
+        "calories_per_100g": 200,
+        "protein_per_100g":  7.0,
+        "carbs_per_100g":    25.0,
+        "fat_per_100g":      8.0,
+        "density":           1.1,
+        "depth_cm":          2.5,
+        "default_weight_g":  250
+    },
+    "naan": {
+        "calories_per_100g": 262,
+        "protein_per_100g":  8.7,
+        "carbs_per_100g":    45.0,
+        "fat_per_100g":      5.1,
+        "density":           0.6,
+        "depth_cm":          1.0,
+        "default_weight_g":  80
+    },
+    "paneer": {
+        "calories_per_100g": 265,
+        "protein_per_100g":  18.3,
+        "carbs_per_100g":    1.2,
+        "fat_per_100g":      20.8,
+        "density":           1.1,
+        "depth_cm":          1.5,
+        "default_weight_g":  100
+    },
+    "fish": {
+        "calories_per_100g": 206,
+        "protein_per_100g":  22.0,
+        "carbs_per_100g":    0.0,
+        "fat_per_100g":      12.0,
+        "density":           1.05,
+        "depth_cm":          2.0,
+        "default_weight_g":  150
+    },
+    "samosa": {
+        "calories_per_100g": 262,
+        "protein_per_100g":  4.4,
+        "carbs_per_100g":    28.8,
+        "fat_per_100g":      14.5,
+        "density":           0.7,
+        "depth_cm":          4.0,
+        "default_weight_g":  80
+    },
+
+    "guava": {
+        "calories_per_100g": 68,
+        "protein_per_100g":  2.6,
+        "carbs_per_100g":    14.3,
+        "fat_per_100g":      0.9,
+        "density":           0.9,
+        "depth_cm":          3.0,
+        "default_weight_g":  150
+    },
+    "grapes": {
+        "calories_per_100g": 69,
+        "protein_per_100g":  0.7,
+        "carbs_per_100g":    18.1,
+        "fat_per_100g":      0.2,
+        "density":           0.8,
+        "depth_cm":          1.5,
+        "default_weight_g":  100
+    },
+    "black_grapes": {
+        "calories_per_100g": 69,
+        "protein_per_100g":  0.7,
+        "carbs_per_100g":    18.1,
+        "fat_per_100g":      0.2,
+        "density":           0.8,
+        "depth_cm":          1.5,
+        "default_weight_g":  100
+    },
+    "blue_grapes": {
+        "calories_per_100g": 69,
+        "protein_per_100g":  0.7,
+        "carbs_per_100g":    18.1,
+        "fat_per_100g":      0.2,
+        "density":           0.8,
+        "depth_cm":          1.5,
+        "default_weight_g":  100
+    },
+    "orange": {
+        "calories_per_100g": 47,
+        "protein_per_100g":  0.9,
+        "carbs_per_100g":    11.8,
+        "fat_per_100g":      0.1,
+        "density":           0.9,
+        "depth_cm":          4.0,
+        "default_weight_g":  150
+    },
+    "broccoli": {
+        "calories_per_100g": 34,
+        "protein_per_100g":  2.8,
+        "carbs_per_100g":    7.0,
+        "fat_per_100g":      0.4,
+        "density":           0.5,
+        "depth_cm":          3.0,
+        "default_weight_g":  100
+    },
+    "carrot": {
+        "calories_per_100g": 41,
+        "protein_per_100g":  0.9,
+        "carbs_per_100g":    9.6,
+        "fat_per_100g":      0.2,
+        "density":           0.9,
+        "depth_cm":          2.5,
+        "default_weight_g":  80
+    },
+    "noodles": {
+        "calories_per_100g": 138,
+        "protein_per_100g":  4.5,
+        "carbs_per_100g":    25.0,
+        "fat_per_100g":      2.1,
+        "density":           1.0,
+        "depth_cm":          2.5,
+        "default_weight_g":  200
+    },
+    "fried_rice": {
+        "calories_per_100g": 163,
+        "protein_per_100g":  4.0,
+        "carbs_per_100g":    22.0,
+        "fat_per_100g":      6.5,
+        "density":           1.1,
+        "depth_cm":          2.0,
+        "default_weight_g":  220
+    },
+    "omelette": {
+        "calories_per_100g": 154,
+        "protein_per_100g":  11.0,
+        "carbs_per_100g":    1.6,
+        "fat_per_100g":      12.0,
+        "density":           0.9,
+        "depth_cm":          1.5,
+        "default_weight_g":  100
+    },
+    "steak": {
+        "calories_per_100g": 271,
+        "protein_per_100g":  26.0,
+        "carbs_per_100g":    0.0,
+        "fat_per_100g":      18.0,
+        "density":           1.05,
+        "depth_cm":          2.5,
+        "default_weight_g":  200
+    },
+    "sushi": {
+        "calories_per_100g": 143,
+        "protein_per_100g":  6.0,
+        "carbs_per_100g":    22.0,
+        "fat_per_100g":      3.5,
+        "density":           1.0,
+        "depth_cm":          2.0,
+        "default_weight_g":  150
+    },
+    "ice_cream": {
+        "calories_per_100g": 207,
+        "protein_per_100g":  3.5,
+        "carbs_per_100g":    24.0,
+        "fat_per_100g":      11.0,
+        "density":           0.6,
+        "depth_cm":          3.0,
+        "default_weight_g":  100
+    },
+    "soup": {
+        "calories_per_100g": 36,
+        "protein_per_100g":  2.0,
+        "carbs_per_100g":    5.0,
+        "fat_per_100g":      1.0,
+        "density":           1.0,
+        "depth_cm":          4.0,
+        "default_weight_g":  250
+    },
+    "hot_dog": {
+        "calories_per_100g": 290,
+        "protein_per_100g":  10.0,
+        "carbs_per_100g":    24.0,
+        "fat_per_100g":      18.0,
+        "density":           0.7,
+        "depth_cm":          4.0,
+        "default_weight_g":  100
+    },
+    "donut": {
+        "calories_per_100g": 452,
+        "protein_per_100g":  4.9,
+        "carbs_per_100g":    51.0,
+        "fat_per_100g":      25.0,
+        "density":           0.5,
+        "depth_cm":          3.0,
+        "default_weight_g":  70
+    },
+    "cake": {
+        "calories_per_100g": 347,
+        "protein_per_100g":  5.0,
+        "carbs_per_100g":    56.0,
+        "fat_per_100g":      12.0,
+        "density":           0.6,
+        "depth_cm":          4.0,
+        "default_weight_g":  100
+    }
+}

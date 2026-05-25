@@ -1,0 +1,131 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+pip-wheel-metadata/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Virtual environments
+venv/
+env/
+ENV/
+env.bak/
+venv.bak/
+.venv
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+.project
+.pydevproject
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+nutrivision.db
+postgres_data/
+
+# Logs
+*.log
+logs/
+*.pot
+
+# AI Models (large files)
+models/yolov8*.pt
+!models/yolov8n.pt  # Include small nano model
+
+# User uploads
+static/profile_pics/*
+static/images/*
+!static/profile_pics/.gitkeep
+!static/images/.gitkeep
+
+# Node modules (if using frontend build)
+node_modules/
+package-lock.json
+yarn.lock
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Docker
+docker-compose.override.yml
+.docker/
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+
+# MyPy
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# Pyre
+.pyre/
+
+# Application specific
+nutrivision_debug.log
+*.tmp
+*.bak
+
+# Secrets
+secrets.json
+api_keys.txt
+
+# Production builds
+dist/
+build/
+
+# Frontend build
+frontend/dist/
+frontend/build/
+frontend/node_modules/
+
+# Railway
+.railway/
+.railway.json
+
+# Heroku
+Procfile
+.slugignore
+
+# Azure
+azure.json
+
+# Temporary files
+*.temp
+*.tmp
+temp/
+tmp/
