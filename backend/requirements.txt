@@ -44,3 +44,4 @@ python-jose[cryptography]==3.3.0
 # ── Environment & Config ──────────────────────────────────────────
 pydantic-settings>=2.0.0     # Pydantic v2 settings management
 huggingface-hub==0.23.0
+gunicorn==22.0.0
