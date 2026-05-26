@@ -1418,121 +1418,238 @@
     loadHistory();
 
     // ==========================================
-    // Auth System
-    // ==========================================
-    const loginCard = document.getElementById("login-card");
-    const signupCard = document.getElementById("signup-card");
+// Auth System
+// ==========================================
 
-    document.getElementById("show-signup").addEventListener("click", (e) => {
-        e.preventDefault();
-        loginCard.style.display = "none";
-        signupCard.style.display = "block";
-    });
+const loginCard = document.getElementById("login-card");
+const signupCard = document.getElementById("signup-card");
 
-    document.getElementById("show-login").addEventListener("click", (e) => {
-        e.preventDefault();
-        signupCard.style.display = "none";
-        loginCard.style.display = "block";
-    });
+document.getElementById("show-signup").addEventListener("click", (e) => {
+    e.preventDefault();
+    loginCard.style.display = "none";
+    signupCard.style.display = "block";
+});
 
-    function updateAuthUI() {
-        const token = localStorage.getItem("token");
-        const analyzeSec = document.getElementById("analyze");
-        const dashSec = document.getElementById("dashboard");
-        const histSec = document.getElementById("history");
-        const profileSec = document.getElementById("profile");
-        const authSec = document.getElementById("auth");
-        const navbar = document.querySelector(".navbar");
+document.getElementById("show-login").addEventListener("click", (e) => {
+    e.preventDefault();
+    signupCard.style.display = "none";
+    loginCard.style.display = "block";
+});
 
-        if (token) {
-            navbar.style.display = "flex";
-            analyzeSec.style.display = "block";
-            dashSec.style.display = "none";
-            histSec.style.display = "none";
-            profileSec.style.display = "none";
-            authSec.style.display = "none";
+function updateAuthUI() {
+    const token = localStorage.getItem("token");
 
-            // Set active nav link
-            document.querySelectorAll(".nav-link").forEach(l => l.classList.remove("active"));
-            document.querySelector('.nav-link[href="#analyze"]').classList.add("active");
-        } else {
-            navbar.style.display = "none";
-            analyzeSec.style.display = "none";
-            dashSec.style.display = "none";
-            histSec.style.display = "none";
-            profileSec.style.display = "none";
-            authSec.style.display = "block";
-        }
+    const analyzeSec = document.getElementById("analyze");
+    const dashSec = document.getElementById("dashboard");
+    const histSec = document.getElementById("history");
+    const profileSec = document.getElementById("profile");
+    const authSec = document.getElementById("auth");
+    const navbar = document.querySelector(".navbar");
+
+    if (token) {
+        navbar.style.display = "flex";
+
+        analyzeSec.style.display = "block";
+        dashSec.style.display = "none";
+        histSec.style.display = "none";
+        profileSec.style.display = "none";
+        authSec.style.display = "none";
+
+        document.querySelectorAll(".nav-link")
+            .forEach(l => l.classList.remove("active"));
+
+        document
+            .querySelector('.nav-link[href="#analyze"]')
+            .classList.add("active");
+
+    } else {
+
+        navbar.style.display = "none";
+
+        analyzeSec.style.display = "none";
+        dashSec.style.display = "none";
+        histSec.style.display = "none";
+        profileSec.style.display = "none";
+
+        authSec.style.display = "block";
     }
+}
 
 
 
-    document.getElementById("signup-form").addEventListener("submit", async (e) => {
-        e.preventDefault();
-        const email = document.getElementById("signup-email").value;
-        const password = document.getElementById("signup-password").value;
-        try {
-            const res = await fetch(API_BASE + "/signup", {
+// ==========================================
+// SIGNUP
+// ==========================================
+
+document.getElementById("signup-form")
+.addEventListener("submit", async (e) => {
+
+    e.preventDefault();
+
+    const email =
+        document.getElementById("signup-email").value;
+
+    const password =
+        document.getElementById("signup-password").value;
+
+    try {
+
+        const res = await fetch(
+            API_BASE + "/api/auth/register",
+            {
                 method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ email, password })
-            });
 
-            const data = await res.json().catch(() => ({ success: false, message: "Invalid server response" }));
-            if (!data.success) {
-                throw new Error(data.message || "Signup failed");
+                headers: {
+                    "Content-Type": "application/json"
+                },
+
+                body: JSON.stringify({
+                    email,
+                    password
+                })
             }
+        );
 
-            alert("Signup successful! Please login.");
-            document.getElementById("show-login").click();
-            document.getElementById("signup-form").reset();
-        } catch (error) {
-            alert("⚠️ " + error.message);
+        const data = await res.json();
+
+        if (!res.ok) {
+            throw new Error(
+                data.detail || "Signup failed"
+            );
         }
-    });
 
-    document.getElementById("login-form").addEventListener("submit", async (e) => {
-        e.preventDefault();
-        const email = document.getElementById("login-email").value;
-        const password = document.getElementById("login-password").value;
-        try {
-            const res = await fetch(API_BASE + "/login", {
+        alert("✅ Signup successful!");
+
+        document
+            .getElementById("show-login")
+            .click();
+
+        document
+            .getElementById("signup-form")
+            .reset();
+
+    } catch (error) {
+
+        alert("⚠️ " + error.message);
+    }
+});
+
+
+
+// ==========================================
+// LOGIN
+// ==========================================
+
+document.getElementById("login-form")
+.addEventListener("submit", async (e) => {
+
+    e.preventDefault();
+
+    const email =
+        document.getElementById("login-email").value;
+
+    const password =
+        document.getElementById("login-password").value;
+
+    try {
+
+        const formData = new URLSearchParams();
+
+        formData.append("username", email);
+        formData.append("password", password);
+
+        const res = await fetch(
+            API_BASE + "/api/auth/token",
+            {
                 method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ email, password })
-            });
 
-            const data = await res.json().catch(() => ({ success: false, message: "Invalid server response" }));
-            if (!data.success) {
-                throw new Error(data.message || "Login failed");
+                headers: {
+                    "Content-Type":
+                        "application/x-www-form-urlencoded"
+                },
+
+                body: formData
             }
+        );
 
-            if (!data.access_token) {
-                throw new Error("No token received from server");
-            }
+        const data = await res.json();
 
-            localStorage.setItem("token", data.access_token);
-            updateAuthUI();
-
-            // Reload user data
-            mealsList.innerHTML = '<div class="empty-state">No meals logged yet today.</div>';
-            historyList.innerHTML = '<div class="empty-state">No history recorded.</div>';
-            dailyTotals = { calories: 0, protein: 0, carbs: 0, fat: 0 };
-            DAILY_TARGETS = { calories: 2500, protein: 100, carbs: 300, fat: 80 };
-            updateDashboard({ totals: { calories: 0, protein: 0, carbs: 0, fat: 0 } });
-            loadHistory(); loadUserGoals(); loadTodaySummary(); loadProfile();
-
-            document.querySelector('.nav-link[href="#analyze"]').click();
-            document.getElementById("login-form").reset();
-        } catch (error) {
-            alert("⚠️ " + error.message);
+        if (!res.ok) {
+            throw new Error(
+                data.detail || "Login failed"
+            );
         }
-    });
 
-    loadHistory();
-    loadUserGoals();
-    loadTodaySummary();
-    loadProfile();
-    updateAuthUI();
+        if (!data.access_token) {
+            throw new Error(
+                "No token received from server"
+            );
+        }
 
+        localStorage.setItem(
+            "token",
+            data.access_token
+        );
+
+        updateAuthUI();
+
+        mealsList.innerHTML =
+            '<div class="empty-state">No meals logged yet today.</div>';
+
+        historyList.innerHTML =
+            '<div class="empty-state">No history recorded.</div>';
+
+        dailyTotals = {
+            calories: 0,
+            protein: 0,
+            carbs: 0,
+            fat: 0
+        };
+
+        DAILY_TARGETS = {
+            calories: 2500,
+            protein: 100,
+            carbs: 300,
+            fat: 80
+        };
+
+        updateDashboard({
+            totals: {
+                calories: 0,
+                protein: 0,
+                carbs: 0,
+                fat: 0
+            }
+        });
+
+        loadHistory();
+        loadUserGoals();
+        loadTodaySummary();
+        loadProfile();
+
+        document
+            .querySelector('.nav-link[href="#analyze"]')
+            .click();
+
+        document
+            .getElementById("login-form")
+            .reset();
+
+    } catch (error) {
+
+        alert("⚠️ " + error.message);
+    }
+});
+
+
+
+// ==========================================
+// INITIAL LOAD
+// ==========================================
+
+loadHistory();
+loadUserGoals();
+loadTodaySummary();
+loadProfile();
+updateAuthUI();
 })();
