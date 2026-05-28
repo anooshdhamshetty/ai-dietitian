@@ -21,67 +21,6 @@
     applyTheme(currentTheme);
 
     const API_BASE = "https://ansh-09-nutrivision-backend.hf.space";
-    const IST_TIME_ZONE = "Asia/Kolkata";
-    const IST_OFFSET_MINUTES = 330;
-
-    function toISTDate(dateLike = new Date()) {
-        const date = dateLike instanceof Date ? dateLike : new Date(dateLike);
-        if (Number.isNaN(date.getTime())) return null;
-        return new Date(date.getTime() + IST_OFFSET_MINUTES * 60000);
-    }
-
-    function getISTDateKey(dateLike = new Date()) {
-        const istDate = toISTDate(dateLike);
-        if (!istDate) return "";
-
-        const year = istDate.getUTCFullYear();
-        const month = String(istDate.getUTCMonth() + 1).padStart(2, "0");
-        const day = String(istDate.getUTCDate()).padStart(2, "0");
-        return `${year}-${month}-${day}`;
-    }
-
-    function formatISTDate(dateLike, options) {
-        const date = dateLike instanceof Date ? dateLike : new Date(dateLike);
-        if (Number.isNaN(date.getTime())) return "";
-
-        return new Intl.DateTimeFormat("en-US", {
-            timeZone: IST_TIME_ZONE,
-            ...options
-        }).format(date);
-    }
-
-    function formatISTDateTime(dateLike) {
-        const date = dateLike instanceof Date ? dateLike : new Date(dateLike);
-        if (Number.isNaN(date.getTime())) return { dateStr: "", timeStr: "" };
-
-        return {
-            dateStr: formatISTDate(date, {
-                weekday: "short",
-                year: "numeric",
-                month: "short",
-                day: "numeric"
-            }),
-            timeStr: formatISTDate(date, {
-                hour: "2-digit",
-                minute: "2-digit",
-                hour12: true
-            })
-        };
-    }
-
-    function getISTDateRangeKeys(days) {
-        const keys = [];
-        const istNow = toISTDate(new Date());
-        if (!istNow) return keys;
-
-        for (let i = days - 1; i >= 0; i--) {
-            const shifted = new Date(istNow.getTime());
-            shifted.setUTCDate(shifted.getUTCDate() - i);
-            keys.push(`${shifted.getUTCFullYear()}-${String(shifted.getUTCMonth() + 1).padStart(2, "0")}-${String(shifted.getUTCDate()).padStart(2, "0")}`);
-        }
-
-        return keys;
-    }
 
     // DOM References
     const uploadArea = document.getElementById("upload-area");
@@ -1096,8 +1035,8 @@
                 updateWeeklyChart();
 
                 // Populate dashboard meals list with today's logs
-                const todayStr = getISTDateKey();
-                const todayLogs = allHistoryLogs.filter(log => getISTDateKey(log.timestamp) === todayStr);
+                const todayStr = new Date().toISOString().split("T")[0];
+                const todayLogs = allHistoryLogs.filter(log => log.timestamp.split("T")[0] === todayStr);
 
                 if (mealsList) {
                     if (todayLogs.length === 0) {
@@ -1235,10 +1174,15 @@
         const canvas = document.getElementById("weekly-chart");
         if (!canvas) return;
 
-        const last7Days = getISTDateRangeKeys(7);
+        const last7Days = [];
+        for (let i = 6; i >= 0; i--) {
+            const d = new Date();
+            d.setDate(d.getDate() - i);
+            last7Days.push(d.toISOString().split("T")[0]);
+        }
 
         const dailyData = last7Days.map(dateStr => {
-            const dayLogs = allHistoryLogs.filter(l => getISTDateKey(l.timestamp) === dateStr);
+            const dayLogs = allHistoryLogs.filter(l => l.timestamp.split("T")[0] === dateStr);
             return {
                 date: dateStr,
                 calories: dayLogs.reduce((sum, l) => sum + (l.calories || 0), 0),
@@ -1247,8 +1191,8 @@
         });
 
         const labels = dailyData.map(d => {
-            const dt = new Date(`${d.date}T12:00:00Z`);
-            return formatISTDate(dt, { weekday: "short", month: "short" });
+            const dt = new Date(d.date);
+            return dt.toLocaleDateString(undefined, { weekday: 'short', month: 'short' });
         });
 
         const calData = dailyData.map(d => Math.round(d.calories));
@@ -1372,18 +1316,20 @@
         const selectedDateStr = historyDate ? historyDate.value : "";
 
         let filtered = allHistoryLogs;
-        const todayStr = getISTDateKey();
+        const now = new Date();
+        const todayStr = now.toISOString().split("T")[0];
 
         if (range === "today") {
             filtered = allHistoryLogs.filter(log => {
-                return getISTDateKey(log.timestamp) === todayStr;
+                return log.timestamp.split("T")[0] === todayStr;
             });
         } else if (range === "7days") {
-            const last7Days = new Set(getISTDateRangeKeys(7));
+            const sevenDaysAgo = new Date();
+            sevenDaysAgo.setDate(now.getDate() - 7);
             filtered = allHistoryLogs.filter(log => last7Days.has(getISTDateKey(log.timestamp)));
         } else if (range === "custom" && selectedDateStr) {
             filtered = allHistoryLogs.filter(log => {
-                return getISTDateKey(log.timestamp) === selectedDateStr;
+                return log.timestamp.split("T")[0] === selectedDateStr;
             });
         }
 
@@ -1400,8 +1346,19 @@
             const entry = document.createElement("div"); 
             entry.className = "history-entry";
             
-            // Format date and time in India Standard Time
-            const { dateStr, timeStr } = formatISTDateTime(log.timestamp);
+            // Format date and time properly
+            const logDate = new Date(log.timestamp);
+            const dateStr = logDate.toLocaleDateString('en-US', { 
+                weekday: 'short', 
+                year: 'numeric', 
+                month: 'short', 
+                day: 'numeric' 
+            });
+            const timeStr = logDate.toLocaleTimeString('en-US', { 
+                hour: '2-digit', 
+                minute: '2-digit',
+                hour12: true
+            });
             
             entry.innerHTML = `<span style="font-size:0.85rem; color:var(--clr-text-muted); font-weight: 600;">📅 ${dateStr} 🕐 ${timeStr}</span>
                 <span class="fw-bold">${formatFoodName(log.food_name)}</span>

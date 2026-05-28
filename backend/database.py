@@ -13,7 +13,7 @@ Table: food_logs
 import os
 from pathlib import Path
 from typing import Optional
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timezone
 
 # Load .env from parent directory
 from dotenv import load_dotenv
@@ -48,8 +48,6 @@ else:
 
 Session = sessionmaker(bind=engine)
 Base    = declarative_base()
-
-IST = timezone(timedelta(hours=5, minutes=30))
 
 
 # ───────────────────────────────────────────────
@@ -160,9 +158,8 @@ def get_today_summary(user_id: int) -> dict:
     """Return the sum of calories and protein for today's logs."""
     session = Session()
     try:
-        now_ist = datetime.now(IST)
-        start_of_today_ist = now_ist.replace(hour=0, minute=0, second=0, microsecond=0)
-        start_of_today = start_of_today_ist.astimezone(timezone.utc).replace(tzinfo=None)
+        now = datetime.now(timezone.utc)
+        start_of_today = now.replace(hour=0, minute=0, second=0, microsecond=0)
         logs = session.query(FoodLog).filter(
             FoodLog.user_id == user_id,
             FoodLog.timestamp >= start_of_today
