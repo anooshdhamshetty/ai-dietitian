@@ -21,6 +21,59 @@
     applyTheme(currentTheme);
 
     const API_BASE = "https://ansh-09-nutrivision-backend.hf.space";
+    const IST_TIME_ZONE = "Asia/Kolkata";
+
+    function getISTDateKey(dateLike = new Date()) {
+        const date = dateLike instanceof Date ? dateLike : new Date(dateLike);
+        if (Number.isNaN(date.getTime())) return "";
+
+        const parts = new Intl.DateTimeFormat("en-CA", {
+            timeZone: IST_TIME_ZONE,
+            year: "numeric",
+            month: "2-digit",
+            day: "2-digit"
+        }).formatToParts(date);
+
+        const year = parts.find((p) => p.type === "year")?.value;
+        const month = parts.find((p) => p.type === "month")?.value;
+        const day = parts.find((p) => p.type === "day")?.value;
+        return `${year}-${month}-${day}`;
+    }
+
+    function formatISTDateTime(dateLike) {
+        const date = dateLike instanceof Date ? dateLike : new Date(dateLike);
+        if (Number.isNaN(date.getTime())) return { dateStr: "", timeStr: "" };
+
+        return {
+            dateStr: date.toLocaleDateString("en-US", {
+                timeZone: IST_TIME_ZONE,
+                weekday: "short",
+                year: "numeric",
+                month: "short",
+                day: "numeric"
+            }),
+            timeStr: date.toLocaleTimeString("en-US", {
+                timeZone: IST_TIME_ZONE,
+                hour: "2-digit",
+                minute: "2-digit",
+                second: "2-digit",
+                hour12: true
+            })
+        };
+    }
+
+    function getISTDateRangeKeys(days) {
+        const keys = [];
+        const anchor = new Date();
+
+        for (let i = days - 1; i >= 0; i--) {
+            const shifted = new Date(anchor.getTime());
+            shifted.setDate(anchor.getDate() - i);
+            keys.push(getISTDateKey(shifted));
+        }
+
+        return keys;
+    }
 
     // DOM References
     const uploadArea = document.getElementById("upload-area");
@@ -779,6 +832,13 @@
     async function loadProfile() {
         const token = localStorage.getItem("token");
         if (!token) return;
+
+        const resolveApiAssetUrl = (url) => {
+            if (!url) return "";
+            if (/^https?:\/\//i.test(url)) return url;
+            return `${API_BASE}${url.startsWith("/") ? "" : "/"}${url}`;
+        };
+
         try {
             const res = await fetch(API_BASE + "/api/profile", {
                 headers: { "Authorization": `Bearer ${token}` }
@@ -811,7 +871,7 @@
                 const profileImg = document.getElementById("profile-pic-img");
                 const navImg = document.getElementById("nav-profile-pic");
                 const defaultPic = `https://ui-avatars.com/api/?name=${encodeURIComponent(data.name || data.email || "User")}&background=random&color=fff&size=128`;
-                const picUrl = data.profile_pic ? data.profile_pic : defaultPic;
+                const picUrl = data.profile_pic ? resolveApiAssetUrl(data.profile_pic) : defaultPic;
 
                 if (profileImg) profileImg.src = picUrl;
                 if (navImg) navImg.src = picUrl;
@@ -841,11 +901,14 @@
                 });
                 if (res.ok) {
                     const data = await res.json();
+                    const resolvedPicUrl = /^https?:\/\//i.test(data.profile_pic)
+                        ? data.profile_pic
+                        : `${API_BASE}${data.profile_pic.startsWith("/") ? "" : "/"}${data.profile_pic}`;
                     // Instant refresh
                     const profileImg = document.getElementById("profile-pic-img");
                     const navImg = document.getElementById("nav-profile-pic");
-                    if (profileImg) profileImg.src = data.profile_pic;
-                    if (navImg) navImg.src = data.profile_pic;
+                    if (profileImg) profileImg.src = resolvedPicUrl;
+                    if (navImg) navImg.src = resolvedPicUrl;
                 } else {
                     const err = await res.json();
                     alert("Upload failed: " + (err.detail || "Unknown error"));
@@ -1035,8 +1098,8 @@
                 updateWeeklyChart();
 
                 // Populate dashboard meals list with today's logs
-                const todayStr = new Date().toISOString().split("T")[0];
-                const todayLogs = allHistoryLogs.filter(log => log.timestamp.split("T")[0] === todayStr);
+                const todayStr = getISTDateKey();
+                const todayLogs = allHistoryLogs.filter(log => getISTDateKey(log.timestamp) === todayStr);
 
                 if (mealsList) {
                     if (todayLogs.length === 0) {
@@ -1174,15 +1237,10 @@
         const canvas = document.getElementById("weekly-chart");
         if (!canvas) return;
 
-        const last7Days = [];
-        for (let i = 6; i >= 0; i--) {
-            const d = new Date();
-            d.setDate(d.getDate() - i);
-            last7Days.push(d.toISOString().split("T")[0]);
-        }
+        const last7Days = getISTDateRangeKeys(7);
 
         const dailyData = last7Days.map(dateStr => {
-            const dayLogs = allHistoryLogs.filter(l => l.timestamp.split("T")[0] === dateStr);
+            const dayLogs = allHistoryLogs.filter(l => getISTDateKey(l.timestamp) === dateStr);
             return {
                 date: dateStr,
                 calories: dayLogs.reduce((sum, l) => sum + (l.calories || 0), 0),
@@ -1191,8 +1249,8 @@
         });
 
         const labels = dailyData.map(d => {
-            const dt = new Date(d.date);
-            return dt.toLocaleDateString(undefined, { weekday: 'short', month: 'short' });
+            const dt = new Date(`${d.date}T00:00:00`);
+            return dt.toLocaleDateString("en-US", { timeZone: IST_TIME_ZONE, weekday: "short", month: "short" });
         });
 
         const calData = dailyData.map(d => Math.round(d.calories));
@@ -1316,22 +1374,18 @@
         const selectedDateStr = historyDate ? historyDate.value : "";
 
         let filtered = allHistoryLogs;
-        const now = new Date();
-        const todayStr = now.toISOString().split("T")[0];
+        const todayStr = getISTDateKey();
 
         if (range === "today") {
             filtered = allHistoryLogs.filter(log => {
-                return log.timestamp.split("T")[0] === todayStr;
+                return getISTDateKey(log.timestamp) === todayStr;
             });
         } else if (range === "7days") {
-            const sevenDaysAgo = new Date();
-            sevenDaysAgo.setDate(now.getDate() - 7);
-            filtered = allHistoryLogs.filter(log => {
-                return new Date(log.timestamp) >= sevenDaysAgo;
-            });
+            const last7Days = new Set(getISTDateRangeKeys(7));
+            filtered = allHistoryLogs.filter(log => last7Days.has(getISTDateKey(log.timestamp)));
         } else if (range === "custom" && selectedDateStr) {
             filtered = allHistoryLogs.filter(log => {
-                return log.timestamp.split("T")[0] === selectedDateStr;
+                return getISTDateKey(log.timestamp) === selectedDateStr;
             });
         }
 
@@ -1348,19 +1402,8 @@
             const entry = document.createElement("div"); 
             entry.className = "history-entry";
             
-            // Format date and time properly
-            const logDate = new Date(log.timestamp);
-            const dateStr = logDate.toLocaleDateString('en-US', { 
-                weekday: 'short', 
-                year: 'numeric', 
-                month: 'short', 
-                day: 'numeric' 
-            });
-            const timeStr = logDate.toLocaleTimeString('en-US', { 
-                hour: '2-digit', 
-                minute: '2-digit',
-                hour12: true
-            });
+            // Force IST display for consistent timestamp rendering.
+            const { dateStr, timeStr } = formatISTDateTime(log.timestamp);
             
             entry.innerHTML = `<span style="font-size:0.85rem; color:var(--clr-text-muted); font-weight: 600;">📅 ${dateStr} 🕐 ${timeStr}</span>
                 <span class="fw-bold">${formatFoodName(log.food_name)}</span>
