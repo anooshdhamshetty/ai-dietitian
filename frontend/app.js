@@ -1326,7 +1326,9 @@
         } else if (range === "7days") {
             const sevenDaysAgo = new Date();
             sevenDaysAgo.setDate(now.getDate() - 7);
-            filtered = allHistoryLogs.filter(log => last7Days.has(getISTDateKey(log.timestamp)));
+            filtered = allHistoryLogs.filter(log => {
+                return new Date(log.timestamp) >= sevenDaysAgo;
+            });
         } else if (range === "custom" && selectedDateStr) {
             filtered = allHistoryLogs.filter(log => {
                 return log.timestamp.split("T")[0] === selectedDateStr;
