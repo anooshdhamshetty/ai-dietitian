@@ -20,7 +20,7 @@
     // Initial Apply
     applyTheme(currentTheme);
 
-    const API_BASE = "https://ansh-09-nutrivision-backend.hf.space";
+    const API_BASE = window.location.protocol === "file:" ? "http://127.0.0.1:8000" : "";
     const IST_TIME_ZONE = "Asia/Kolkata";
 
     function getISTDateKey(dateLike = new Date()) {
@@ -158,7 +158,10 @@
     }
 
     function resolveFood(label) {
-        if (!label || label === "_default") return "Mixed Food";
+        if (!label) return "Mixed Food";
+        const low = String(label).toLowerCase();
+        if (low === "_default" || low === "default" || low === "mixed food") return "Mixed Food";
+        if (label === "Non-Edible" || label === "non-edible") return "non-edible";
         const clean = label.toLowerCase().trim().replace(/_/g, " ");
 
         // 1. Exact match
@@ -210,7 +213,10 @@
      * and appends count if provided, eg: "Banana (3)"
      */
     function formatFoodName(name, count) {
-        if (!name || name === "_default") return "Mixed Food";
+        if (!name) return "Mixed Food";
+        const low = String(name).toLowerCase();
+        if (low === "_default" || low === "default" || low === "mixed food") return "Mixed Food";
+        if (name === "Non-Edible" || name.toLowerCase() === "non-edible") return "Non-Edible";
         // Remove trailing (xN) from backend string just in case
         let cleanName = name.replace(/\s*\(x\d+\)/i, "");
         cleanName = cleanName.replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase());
@@ -433,6 +439,15 @@
         return 200; // Fallback
     }
 
+    function isNonEdibleItem(item) {
+        if (!item) return false;
+        return Boolean(item.is_non_edible) || item.food_name === "Non-Edible" || item.food_name === "non-edible" || (item.message && item.message.toLowerCase().includes("non-edible"));
+    }
+
+    function isAllNonEdible(data) {
+        return Array.isArray(data?.items) && data.items.length > 0 && data.items.every(isNonEdibleItem);
+    }
+
     // Render Results
     function renderResults(data) {
         resultsCards.innerHTML = "";
@@ -440,6 +455,38 @@
         // Group identical foods
         const groupedItemsMap = {};
         data.items.forEach(item => {
+            if (isNonEdibleItem(item)) {
+                item.food_name = "Non-Edible";
+                item.display_name = "Non-Edible";
+                item.note = item.message || "Detected object is non-edible and cannot be analyzed for nutrition.";
+                item.weight = 0;
+                item.calories = 0;
+                item.protein = 0;
+                item.carbs = 0;
+                item.fat = 0;
+                item._per100 = { calories: 0, protein: 0, carbs: 0, fat: 0 };
+
+                if (!groupedItemsMap["Non-Edible"]) {
+                    groupedItemsMap["Non-Edible"] = {
+                        food_name: "Non-Edible",
+                        display_name: "Non-Edible",
+                        note: item.note,
+                        count: 0,
+                        weight: 0,
+                        calories: 0,
+                        protein: 0,
+                        carbs: 0,
+                        fat: 0,
+                        bboxes: []
+                    };
+                }
+                const nonEdibleGroup = groupedItemsMap["Non-Edible"];
+                nonEdibleGroup.count += 1;
+                if (item.bboxes) nonEdibleGroup.bboxes = nonEdibleGroup.bboxes.concat(item.bboxes);
+                else if (item.bbox) nonEdibleGroup.bboxes.push(item.bbox);
+                return;
+            }
+
             // RAG-lite Resolution Layer
             const resolvedKey = resolveFood(item.food_name);
             const localNutrition = foodData[resolvedKey];
@@ -515,13 +562,27 @@
             card.style.animationDelay = (i * 0.08) + "s";
             card.setAttribute("data-index", i);
 
-            // Format title text
-            let rawName = item.display_name || item.food_name.replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase());
-            if (rawName === "Default") rawName = "Mixed Food";
+            // Format title text using canonical formatter (handles _default and non-edible)
+            let titleText = formatFoodName(item.display_name || item.food_name, item.count);
 
-            let titleText = rawName;
-            if (item.count > 1) {
-                titleText = `${rawName} ×${item.count}`;
+            if (isNonEdibleItem(item)) {
+                card.classList.add("non-edible-result-card");
+                card.innerHTML = `
+                    <div class="result-card-header">
+                        <span class="result-food-name" style="color: #fcc419; font-size: 1.15rem; font-weight: 800;">${titleText}</span>
+                        <span class="result-weight" id="rw-${i}" style="background: rgba(252, 196, 25, 0.14); color: #fcc419;">Non-Edible</span>
+                    </div>
+                    <div class="result-note" style="margin-top: 0.5rem; color: var(--clr-text-main);">
+                        ${item.note || "Detected object is non-edible and cannot be analyzed for nutrition."}
+                    </div>
+                    <div class="result-macros" id="rm-${i}" style="margin-top: 0.85rem;">
+                        <span class="macro-pill clr-cal">🔥 0 kcal</span>
+                        <span class="macro-pill clr-pro">🥩 0.0g pro</span>
+                        <span class="macro-pill clr-carb">🍞 0.0g carb</span>
+                        <span class="macro-pill clr-fat">🧈 0.0g fat</span>
+                    </div>`;
+                resultsCards.appendChild(card);
+                return;
             }
 
             const weightIndicator = portionEstimationMode === 'ai' ? '✨' : '≈';
@@ -615,6 +676,13 @@
         const meterFill = document.getElementById("calorie-meter-fill");
 
         if (feedbackEl && meterContainer && meterFill) {
+            if (isAllNonEdible(data)) {
+                feedbackEl.style.display = "none";
+                meterContainer.style.display = "none";
+                meterFill.style.width = "0%";
+                return;
+            }
+
             meterContainer.style.display = "block";
 
             // Animate width based on 1000 kcal max reference
@@ -758,6 +826,9 @@
         setBar(barProtein, dailyTotals.protein, DAILY_TARGETS.protein);
         setBar(barCarbs, dailyTotals.carbs, DAILY_TARGETS.carbs);
         setBar(barFats, dailyTotals.fat, DAILY_TARGETS.fat);
+
+        updateGamifiedWidget();
+        updateForecastWidget();
     }
 
 
@@ -829,6 +900,521 @@
         } catch (e) { }
     }
 
+    function updateBMIWidget(weight, height) {
+        const bmiContent = document.getElementById("bmi-content");
+        if (!bmiContent) return;
+
+        const w = parseFloat(weight);
+        const h = parseFloat(height);
+
+        if (isNaN(w) || isNaN(h) || w <= 0 || h <= 0) {
+            bmiContent.innerHTML = '<div class="empty-state" style="padding: 0.5rem 0;">Complete your profile to calculate BMI.</div>';
+            return;
+        }
+
+        const bmi = w / ((h / 100) * (h / 100));
+        const bmiRounded = bmi.toFixed(1);
+
+        let badgeText = "";
+        let badgeClass = "";
+        let messageText = "";
+
+        if (bmi < 18.5) {
+            badgeText = "⚠️ Underweight";
+            badgeClass = "bmi-badge-underweight";
+            messageText = "You are below the recommended weight range.<br>Consider increasing calorie and protein intake.";
+        } else if (bmi < 25) {
+            badgeText = "✅ Healthy Weight";
+            badgeClass = "bmi-badge-healthy";
+            messageText = "Great job! Your BMI falls within the healthy range.<br>Keep maintaining your current lifestyle.";
+        } else if (bmi < 30) {
+            badgeText = "⚠️ Overweight";
+            badgeClass = "bmi-badge-overweight";
+            messageText = "Your BMI is above the recommended range.<br>Consider reducing excess calories and increasing physical activity.";
+        } else {
+            badgeText = "🚨 Obesity Risk";
+            badgeClass = "bmi-badge-obesity";
+            messageText = "Your BMI is significantly above the healthy range.<br>Focus on gradual weight management and healthy eating habits.";
+        }
+
+        const minWeight = Math.round(18.5 * (h / 100) * (h / 100));
+        const maxWeight = Math.round(24.9 * (h / 100) * (h / 100));
+
+        bmiContent.innerHTML = `
+            <div style="font-size: 1.1rem; font-weight: 500; display: flex; flex-direction: column; gap: 0.75rem;">
+                <div>
+                    BMI: <span style="font-size: 1.25rem; font-weight: 800; color: var(--clr-primary);">${bmiRounded}</span>
+                </div>
+                <div>
+                    <span class="bmi-badge ${badgeClass}">${badgeText}</span>
+                </div>
+                <div style="font-size: 0.85rem; line-height: 1.4; color: var(--clr-text-main);">
+                    ${messageText}
+                </div>
+                <div style="margin-top: 0.5rem; padding-top: 0.75rem; border-top: 1px solid var(--clr-border);">
+                    <span style="font-size: 0.85rem; font-weight: 700; color: var(--clr-text-muted); display: block; margin-bottom: 0.25rem;">
+                        🎯 Ideal Weight Range:
+                    </span>
+                    <span style="font-size: 1.05rem; font-weight: 800; color: var(--clr-text-main);">
+                        ${minWeight}kg - ${maxWeight}kg
+                    </span>
+                </div>
+            </div>
+        `;
+    }
+
+    let currentUserEmail = "";
+
+    const BADGES = [
+        { name: "🥄 Beginner", minLevel: 1 },
+        { name: "🥗 Healthy Eater", minLevel: 3 },
+        { name: "🍎 Nutrition Explorer", minLevel: 6 },
+        { name: "🥩 Protein Master", minLevel: 9 },
+        { name: "🔥 Macro Expert", minLevel: 12 },
+        { name: "🏆 Nutrition Champion", minLevel: 15 },
+        { name: "👑 Elite Dietitian", minLevel: 18 }
+    ];
+
+    function calculateStreakFromHistory(logs) {
+        if (!logs || logs.length === 0) return 0;
+        
+        const uniqueDates = Array.from(new Set(logs.map(log => getISTDateKey(log.timestamp))))
+            .filter(Boolean)
+            .sort((a, b) => new Date(b) - new Date(a));
+            
+        if (uniqueDates.length === 0) return 0;
+        
+        const todayStr = getISTDateKey();
+        const yesterday = new Date();
+        yesterday.setDate(yesterday.getDate() - 1);
+        const yesterdayStr = getISTDateKey(yesterday);
+        
+        const mostRecentDate = uniqueDates[0];
+        
+        if (mostRecentDate !== todayStr && mostRecentDate !== yesterdayStr) {
+            return 0;
+        }
+        
+        let streak = 0;
+        let checkDate = new Date(mostRecentDate);
+        
+        for (let i = 0; i < 365; i++) {
+            const checkStr = getISTDateKey(checkDate);
+            if (uniqueDates.includes(checkStr)) {
+                streak++;
+                checkDate.setDate(checkDate.getDate() - 1);
+            } else {
+                break;
+            }
+        }
+        
+        return streak;
+    }
+
+    function saveStreakToStorage(streak) {
+        if (!currentUserEmail) return;
+        localStorage.setItem(`streak_count_${currentUserEmail}`, streak);
+        localStorage.setItem(`streak_last_date_${currentUserEmail}`, getISTDateKey());
+    }
+
+    function getBadgeDetails(level, xp) {
+        let currentBadge = BADGES[0].name;
+        let nextBadgeObj = BADGES[1];
+        
+        for (let i = 0; i < BADGES.length; i++) {
+            if (level >= BADGES[i].minLevel) {
+                currentBadge = BADGES[i].name;
+                nextBadgeObj = BADGES[i+1] || null;
+            }
+        }
+        
+        let xpRemaining = 0;
+        if (nextBadgeObj) {
+            const totalNeeded = (nextBadgeObj.minLevel - 1) * 1000;
+            xpRemaining = Math.max(0, totalNeeded - xp);
+        }
+        
+        return {
+            currentBadge,
+            nextBadge: nextBadgeObj ? nextBadgeObj.name : "Max Badge Reached! 👑",
+            xpRemaining
+        };
+    }
+
+    function getNextChallenge() {
+        const proteinGoal = DAILY_TARGETS.protein || 100;
+        const calorieGoal = DAILY_TARGETS.calories || 2500;
+        
+        const currentProtein = dailyTotals.protein || 0;
+        const currentCalories = dailyTotals.calories || 0;
+        
+        if (currentProtein < proteinGoal) {
+            return {
+                text: `Reach ${Math.round(proteinGoal)}g Protein Today`,
+                reward: 25
+            };
+        } else if (currentCalories < calorieGoal * 0.8) {
+            return {
+                text: "Log One More Healthy Meal",
+                reward: 20
+            };
+        } else {
+            return {
+                text: "Maintain Your Healthy Streak",
+                reward: 15
+            };
+        }
+    }
+
+    function updateGamifiedWidget() {
+        const journeyContent = document.getElementById("journey-content");
+        if (!journeyContent) return;
+
+        const defaultHTML = `
+            <div class="journey-header">
+                <div class="journey-level-row">
+                    <span>Level 1 Beginner</span>
+                    <span>•</span>
+                    <span class="journey-streak-text">🔥 0 Day Streak</span>
+                </div>
+            </div>
+            <div class="journey-progress-section">
+                <div class="journey-xp-row">
+                    <span>0 / 1000 XP</span>
+                    <span>0%</span>
+                </div>
+                <div class="journey-progress-track">
+                    <div class="journey-progress-fill" style="width: 0%"></div>
+                </div>
+                <div class="journey-remaining-row">
+                    <span>✨ 2000 XP Remaining</span>
+                </div>
+            </div>
+            <div class="journey-challenge-row">
+                <div class="journey-challenge-title-line">
+                    <span>🎯</span>
+                    <span>Next Challenge Log a healthy meal today</span>
+                </div>
+                <span class="journey-challenge-reward-line">+15 XP Reward</span>
+            </div>
+            <div class="journey-badge-row">
+                <span>🏆 Next Badge: 🥗 <span class="journey-badge-highlight">Healthy Eater</span></span>
+            </div>
+        `;
+
+        if (!allHistoryLogs) {
+            journeyContent.innerHTML = defaultHTML;
+            return;
+        }
+
+        const streak = calculateStreakFromHistory(allHistoryLogs);
+        if (currentUserEmail) {
+            saveStreakToStorage(streak);
+        }
+
+        const baseXP = allHistoryLogs.length * 100;
+        const streakXP = streak * 50;
+        const challengeBonusXP = currentUserEmail ? (parseInt(localStorage.getItem(`challenge_bonus_xp_${currentUserEmail}`)) || 0) : 0;
+        const xp = baseXP + streakXP + challengeBonusXP;
+
+        const level = Math.floor(xp / 1000) + 1;
+        const xpInLevel = xp % 1000;
+        const pct = Math.floor((xpInLevel / 1000) * 100);
+
+        const levelTitles = ["Beginner", "Beginner", "Explorer", "Explorer", "Practitioner", "Practitioner", "Nutritionist", "Nutritionist", "Specialist", "Specialist", "Expert", "Expert", "Elite Dietitian"];
+        const getLevelTitle = (lvl) => levelTitles[Math.min(lvl, levelTitles.length) - 1] || "Master Dietitian";
+        const title = getLevelTitle(level);
+
+        const badgeDetails = getBadgeDetails(level, xp);
+        
+        const challenge = getNextChallenge();
+        const todayStr = getISTDateKey();
+        const isChallengeCompleted = currentUserEmail ? (localStorage.getItem(`challenge_completed_date_${currentUserEmail}`) === todayStr) : false;
+
+        if (currentUserEmail && !isChallengeCompleted) {
+            let met = false;
+            if (challenge.text.includes("Protein") && dailyTotals.protein >= (DAILY_TARGETS.protein || 100)) {
+                met = true;
+            } else if (challenge.text.includes("Meal") && allHistoryLogs.filter(log => getISTDateKey(log.timestamp) === todayStr).length > 0) {
+                met = true;
+            } else if (challenge.text.includes("Streak") && streak > 0) {
+                met = true;
+            }
+
+            if (met) {
+                localStorage.setItem(`challenge_completed_date_${currentUserEmail}`, todayStr);
+                let bonusXP = parseInt(localStorage.getItem(`challenge_bonus_xp_${currentUserEmail}`)) || 0;
+                bonusXP += challenge.reward;
+                localStorage.setItem(`challenge_bonus_xp_${currentUserEmail}`, bonusXP);
+                
+                setTimeout(updateGamifiedWidget, 100);
+                return;
+            }
+        }
+
+        const challengeHTML = isChallengeCompleted ? `
+            <div class="journey-challenge-row">
+                <div class="journey-challenge-title-line">
+                    <span>🎯</span>
+                    <span>Next Challenge ${challenge.text}</span>
+                </div>
+                <span class="journey-challenge-reward-line" style="color: #34d399;">+${challenge.reward} XP Claimed ✓</span>
+            </div>
+        ` : `
+            <div class="journey-challenge-row">
+                <div class="journey-challenge-title-line">
+                    <span>🎯</span>
+                    <span>Next Challenge ${challenge.text}</span>
+                </div>
+                <span class="journey-challenge-reward-line">+${challenge.reward} XP Reward</span>
+            </div>
+        `;
+
+        const nextBadgeStr = badgeDetails.nextBadge || "";
+        const spaceIdx = nextBadgeStr.indexOf(" ");
+        const badgeEmoji = spaceIdx !== -1 ? nextBadgeStr.substring(0, spaceIdx) : "";
+        const badgeName = spaceIdx !== -1 ? nextBadgeStr.substring(spaceIdx + 1) : nextBadgeStr;
+
+        journeyContent.innerHTML = `
+            <div class="journey-header">
+                <div class="journey-level-row">
+                    <span>Level ${level} ${title}</span>
+                    <span>•</span>
+                    <span class="journey-streak-text">🔥 ${streak} Day Streak</span>
+                </div>
+            </div>
+            <div class="journey-progress-section">
+                <div class="journey-xp-row">
+                    <span>${xpInLevel} / 1000 XP</span>
+                    <span>${pct}%</span>
+                </div>
+                <div class="journey-progress-track">
+                    <div class="journey-progress-fill" style="width: ${pct}%"></div>
+                </div>
+                <div class="journey-remaining-row">
+                    <span>✨ ${badgeDetails.xpRemaining} XP Remaining</span>
+                </div>
+            </div>
+            ${challengeHTML}
+            <div class="journey-badge-row">
+                <span>🏆 Next Badge: ${badgeEmoji} <span class="journey-badge-highlight">${badgeName}</span></span>
+            </div>
+        `;
+    }
+
+    function updateForecastWidget() {
+        const forecastContent = document.getElementById("forecast-content");
+        if (!forecastContent) return;
+
+        const defaultHTML = `
+            <div class="empty-state" style="padding: 0.5rem 0;">Log a meal to see your AI Forecast.</div>
+        `;
+
+        if (!allHistoryLogs || allHistoryLogs.length === 0) {
+            forecastContent.innerHTML = defaultHTML;
+            return;
+        }
+
+        // Get IST dates for the last 7 days (including today)
+        const last7Days = getISTDateRangeKeys(7);
+        const dailySummaries = {};
+        last7Days.forEach(date => {
+            dailySummaries[date] = { calories: 0, protein: 0 };
+        });
+
+        // Sum up logs by date
+        allHistoryLogs.forEach(log => {
+            const dateKey = getISTDateKey(new Date(log.timestamp));
+            if (dailySummaries.hasOwnProperty(dateKey)) {
+                dailySummaries[dateKey].calories += log.calories || 0;
+                dailySummaries[dateKey].protein += log.protein || 0;
+            }
+        });
+
+        // Fallback for today's summary to include any active unsaved/in-memory totals
+        const todayStr = getISTDateKey();
+        if (dailySummaries[todayStr]) {
+            dailySummaries[todayStr].calories = Math.max(dailySummaries[todayStr].calories, dailyTotals.calories || 0);
+            dailySummaries[todayStr].protein = Math.max(dailySummaries[todayStr].protein, dailyTotals.protein || 0);
+        }
+
+        // Calculate compliance and total logged days in the last 7 days
+        let compliantDays = 0;
+        let totalLoggedDays = 0;
+        let totalCaloriesSum = 0;
+        const calorieGoal = DAILY_TARGETS.calories || 2500;
+        const proteinGoal = DAILY_TARGETS.protein || 100;
+
+        last7Days.forEach(date => {
+            const day = dailySummaries[date];
+            if (day.calories > 0 || day.protein > 0) {
+                totalLoggedDays++;
+                totalCaloriesSum += day.calories;
+                const isCalCompliant = (day.calories >= calorieGoal * 0.8 && day.calories <= calorieGoal * 1.15);
+                const isProCompliant = (day.protein >= proteinGoal * 0.8);
+                if (isCalCompliant && isProCompliant) {
+                    compliantDays++;
+                }
+            }
+        });
+
+        // If no logged days at all, show default empty/fallback state
+        if (totalLoggedDays === 0) {
+            forecastContent.innerHTML = defaultHTML;
+            return;
+        }
+
+        // Determine trend
+        let trend = "Stable";
+        let trendClass = "trend-stable";
+        let trendText = "Stable Trend";
+        let trendIcon = "📈";
+
+        if (totalLoggedDays <= 1) {
+            trend = "Stable";
+            trendClass = "trend-stable";
+            trendText = "Stable Trend";
+            trendIcon = "📈";
+        } else {
+            const complianceRate = compliantDays / totalLoggedDays;
+            if (complianceRate >= 0.6) {
+                trend = "Improving";
+                trendClass = "trend-improving";
+                trendText = "Improving Trend";
+                trendIcon = "📈";
+            } else if (complianceRate >= 0.3) {
+                trend = "Stable";
+                trendClass = "trend-stable";
+                trendText = "Stable Trend";
+                trendIcon = "📈";
+            } else {
+                trend = "Declining";
+                trendClass = "trend-declining";
+                trendText = "Declining Trend";
+                trendIcon = "📉";
+            }
+        }
+
+        // Calculate predicted change based on average daily calorie deficit/surplus
+        const averageDailyCal = totalLoggedDays > 0 ? (totalCaloriesSum / totalLoggedDays) : calorieGoal;
+        const diff = averageDailyCal - calorieGoal;
+        let predictedChangeStr = "0.0 kg/week";
+
+        const change = diff / 1100;
+        if (Math.abs(change) >= 0.05) {
+            const prefix = change > 0 ? "+" : "";
+            predictedChangeStr = `${prefix}${change.toFixed(1)}kg/week`;
+        }
+
+        // Calculate Success Probability
+        const streak = calculateStreakFromHistory(allHistoryLogs);
+        let prob = 50; // Base probability
+
+        // Add streak weight (up to 25%)
+        prob += Math.min(25, streak * 5);
+
+        // Add compliance weight (up to 20%)
+        if (totalLoggedDays > 0) {
+            const complianceRate = compliantDays / totalLoggedDays;
+            prob += Math.min(20, Math.round(complianceRate * 20));
+        }
+
+        // Add today logging consistency
+        const loggedToday = dailySummaries[todayStr] && dailySummaries[todayStr].calories > 0;
+        if (loggedToday) prob += 10;
+
+        if (totalLoggedDays >= 3) prob += 10;
+        if (totalLoggedDays >= 5) prob += 5;
+
+        // Cap success probability realistically
+        prob = Math.max(15, Math.min(98, prob));
+
+        // Generate Insights
+        let insightText = "";
+        let subInsightText = "";
+
+        if (trend === "Improving") {
+            insightText = "Maintain your current eating pattern.";
+            if (dailyTotals.protein >= proteinGoal) {
+                subInsightText = "Your high protein compliance is supporting lean mass and active recovery.";
+            } else {
+                subInsightText = "Your calorie consistency is supporting steady, predictable progress.";
+            }
+        } else if (trend === "Stable") {
+            insightText = "Your habits are currently steady.";
+            if (streak > 0) {
+                subInsightText = "Keep building on your streak to lock in more long-term health improvements.";
+            } else {
+                subInsightText = "Try aiming for closer alignment with your daily protein goal to boost success probability.";
+            }
+        } else {
+            insightText = "Let's focus on consistency.";
+            subInsightText = "A few missed goals recently. Focus on meeting your protein target today to rebound.";
+        }
+
+        // Render layout
+        forecastContent.innerHTML = `
+            <div class="forecast-trend-row">
+                <span class="trend-badge ${trendClass}">
+                    <span class="pulse-animation">${trendIcon}</span> ${trendText}
+                </span>
+                <span>•</span>
+                <span style="font-weight: 800; color: var(--clr-text-main);">⚖️ ${predictedChangeStr}</span>
+            </div>
+
+            <div class="forecast-prob-row" style="display:flex; justify-content:space-between; align-items:center; font-weight:700; margin-top:0.2rem;">
+                <span>🎯 Success Probability</span>
+                <span id="forecast-prob-value" class="forecast-prob-val" data-value="0">0%</span>
+            </div>
+            <div class="forecast-progress-track">
+                <div id="forecast-progress-fill" class="forecast-progress-fill" style="width: 0%"></div>
+            </div>
+
+            <div class="forecast-insight-box">
+                <div class="forecast-insight-title">💡 AI Insight</div>
+                <div class="forecast-insight-text">
+                    <strong>${insightText}</strong><br>
+                    <span class="forecast-insight-sub">${subInsightText}</span>
+                </div>
+            </div>
+
+            <div class="forecast-footer">
+                <span>✨ Keep going!</span>
+            </div>
+        `;
+
+        // Animate progress bar and counter
+        const fillEl = document.getElementById("forecast-progress-fill");
+        const probEl = document.getElementById("forecast-prob-value");
+
+        if (fillEl) {
+            // Trigger reflow to ensure animation runs
+            fillEl.getBoundingClientRect();
+            fillEl.style.width = prob + "%";
+        }
+
+        if (probEl) {
+            const startVal = 0;
+            const duration = 800; // ms
+            let startTimestamp = null;
+
+            const step = (timestamp) => {
+                if (!startTimestamp) startTimestamp = timestamp;
+                const progress = Math.min((timestamp - startTimestamp) / duration, 1);
+                const currentVal = Math.floor(progress * (prob - startVal) + startVal);
+                probEl.innerHTML = currentVal + "%";
+                probEl.setAttribute("data-value", currentVal);
+                if (progress < 1) {
+                    window.requestAnimationFrame(step);
+                } else {
+                    probEl.innerHTML = prob + "%";
+                    probEl.setAttribute("data-value", prob);
+                }
+            };
+            window.requestAnimationFrame(step);
+        }
+    }
+
     async function loadProfile() {
         const token = localStorage.getItem("token");
         if (!token) return;
@@ -875,6 +1461,12 @@
 
                 if (profileImg) profileImg.src = picUrl;
                 if (navImg) navImg.src = picUrl;
+
+                // Update BMI widget
+                updateBMIWidget(data.weight, data.height);
+                currentUserEmail = data.email || "";
+                updateGamifiedWidget();
+                updateForecastWidget();
             }
         } catch (e) { }
     }
@@ -956,6 +1548,9 @@
                 DAILY_TARGETS.protein = pro;
                 updateDashboard({ totals: { calories: 0, protein: 0, carbs: 0, fat: 0 } });
                 await loadFeedback();
+
+                // Update BMI widget
+                updateBMIWidget(weight, height);
 
                 if (caloriesInput) caloriesInput.value = cal;
                 if (proteinInput) proteinInput.value = pro;
@@ -1126,6 +1721,8 @@
                     }
                 }
                 updateSwapSuggestion(todayLogs);
+                updateGamifiedWidget();
+                updateForecastWidget();
             }
         } catch (_) { }
     }
@@ -1134,6 +1731,8 @@
         const swapCard = document.getElementById("swap-suggestion-card");
         const swapContent = document.getElementById("swap-suggestion-content");
         if (!swapCard || !swapContent) return;
+
+        const edibleLogs = (todayLogs || []).filter(log => !isNonEdibleItem(log));
 
         // 1. Calculate Diet Status
         const calOk = dailyTotals.calories <= DAILY_TARGETS.calories;
@@ -1166,8 +1765,8 @@
         let bestItemToSwap = null;
         let maxCals = -1;
 
-        if (todayLogs && todayLogs.length > 0) {
-            todayLogs.forEach(log => {
+        if (edibleLogs.length > 0) {
+            edibleLogs.forEach(log => {
                 const name = log.food_name.toLowerCase().replace(/_/g, " ");
                 const swapKey = Object.keys(SWAP_SUGGESTIONS).find(key => name.includes(key));
 
@@ -1197,7 +1796,7 @@
                     </div>
                 </div>
             `;
-        } else if (todayLogs && todayLogs.length > 0) {
+        } else if (edibleLogs.length > 0) {
             swapHtml = `
                 <div style="text-align: center; padding: 0.5rem 0; opacity: 0.8; background: rgba(81, 207, 102, 0.05); border-radius: 8px; margin: 0.5rem 0;">
                     <p style="font-size: 0.8rem; font-weight: 700; color: #51cf66;">🥗 Eating Clean!</p>
