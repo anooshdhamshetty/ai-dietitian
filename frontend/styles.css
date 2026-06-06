@@ -1417,3 +1417,257 @@ button:disabled {
 .swap-content {
     margin-top: 0.5rem;
 }
+
+/* BMI Health Insights Widget Styles */
+.bmi-badge {
+    display: inline-block;
+    font-size: 0.85rem;
+    padding: 0.35rem 0.85rem;
+    border-radius: 20px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.bmi-badge-healthy {
+    background: rgba(81, 207, 102, 0.15);
+    color: #51cf66;
+    border: 1px solid rgba(81, 207, 102, 0.3);
+}
+
+.bmi-badge-underweight {
+    background: rgba(252, 196, 25, 0.15);
+    color: #fcc419;
+    border: 1px solid rgba(252, 196, 25, 0.3);
+}
+
+.bmi-badge-overweight {
+    background: rgba(249, 115, 22, 0.15);
+    color: #f97316;
+    border: 1px solid rgba(249, 115, 22, 0.3);
+}
+
+.bmi-badge-obesity {
+    background: rgba(255, 107, 107, 0.15);
+    color: #ff6b6b;
+    border: 1px solid rgba(255, 107, 107, 0.3);
+}
+
+/* Gamified Nutrition Journey Widget Styles */
+.journey-content {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-top: 0.15rem;
+    font-size: 0.95rem;
+    color: var(--clr-text-main);
+    line-height: 1.45;
+}
+
+.journey-row {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+}
+
+.journey-level-row {
+    font-weight: 700;
+}
+
+.journey-streak-text {
+    font-weight: 700;
+    color: #f87171;
+}
+
+.journey-xp-row {
+    display: flex;
+    justify-content: space-between;
+    font-weight: 700;
+}
+
+.journey-progress-track {
+    height: 8px;
+    background: rgba(255, 255, 255, 0.08);
+    border-radius: 8px;
+    overflow: hidden;
+    position: relative;
+    border: 1px solid rgba(255, 255, 255, 0.03);
+    margin-top: 0.15rem;
+    margin-bottom: 0.15rem;
+}
+
+.journey-progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #8b5cf6, #ec4899);
+    border-radius: 8px;
+    transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 0 8px rgba(139, 92, 246, 0.4);
+}
+
+.journey-remaining-row {
+    font-weight: 600;
+    color: var(--clr-text-muted);
+}
+
+.journey-challenge-row {
+    display: flex;
+    flex-direction: column;
+    margin-top: 0.15rem;
+    margin-bottom: 0.15rem;
+}
+
+.journey-challenge-title-line {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.35rem;
+    font-weight: 700;
+}
+
+.journey-challenge-reward-line {
+    margin-left: 1.5rem;
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: #34d399;
+}
+
+.journey-badge-row {
+    font-weight: 700;
+    margin-top: 0.2rem;
+    padding-top: 0.45rem;
+    border-top: 1px solid var(--clr-border);
+}
+
+.journey-badge-highlight {
+    color: #a78bfa;
+}
+
+/* AI Forecast Widget Styles */
+.forecast-content {
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+    margin-top: 0.15rem;
+    font-size: 0.95rem;
+    color: var(--clr-text-main);
+    line-height: 1.45;
+}
+
+.forecast-trend-row {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-weight: 700;
+}
+
+.trend-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    padding: 0.25rem 0.65rem;
+    border-radius: 12px;
+    font-size: 0.85rem;
+    transition: all 0.3s ease;
+}
+
+.trend-improving {
+    background: rgba(81, 207, 102, 0.15);
+    color: #51cf66;
+    border: 1px solid rgba(81, 207, 102, 0.3);
+    box-shadow: 0 0 8px rgba(81, 207, 102, 0.15);
+}
+
+.trend-stable {
+    background: rgba(252, 196, 25, 0.15);
+    color: #fcc419;
+    border: 1px solid rgba(252, 196, 25, 0.3);
+    box-shadow: 0 0 8px rgba(252, 196, 25, 0.15);
+}
+
+.trend-declining {
+    background: rgba(255, 107, 107, 0.15);
+    color: #ff6b6b;
+    border: 1px solid rgba(255, 107, 107, 0.3);
+    box-shadow: 0 0 8px rgba(255, 107, 107, 0.15);
+}
+
+.forecast-prob-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-weight: 700;
+    margin-top: 0.2rem;
+}
+
+.forecast-prob-val {
+    font-size: 1.1rem;
+    font-weight: 800;
+    color: var(--clr-primary);
+}
+
+.forecast-progress-track {
+    height: 8px;
+    background: rgba(255, 255, 255, 0.08);
+    border-radius: 8px;
+    overflow: hidden;
+    position: relative;
+    border: 1px solid rgba(255, 255, 255, 0.03);
+    margin-top: 0.1rem;
+}
+
+.forecast-progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #8b5cf6, #3b82f6);
+    border-radius: 8px;
+    width: 0%;
+    transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 0 8px rgba(139, 92, 246, 0.4);
+}
+
+.forecast-insight-box {
+    background: rgba(255, 255, 255, 0.03);
+    border-left: 3px solid var(--clr-primary);
+    padding: 0.6rem 0.8rem;
+    border-radius: 4px 8px 8px 4px;
+    margin-top: 0.2rem;
+}
+
+.forecast-insight-title {
+    font-size: 0.8rem;
+    font-weight: 800;
+    color: var(--clr-text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 0.25rem;
+}
+
+.forecast-insight-text {
+    font-size: 0.88rem;
+    line-height: 1.4;
+    color: var(--clr-text-main);
+}
+
+.forecast-insight-sub {
+    font-size: 0.85rem;
+    color: var(--clr-text-muted);
+}
+
+.forecast-footer {
+    display: flex;
+    justify-content: flex-end;
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: #a78bfa;
+    margin-top: 0.1rem;
+    font-style: italic;
+}
+
+/* Animations */
+@keyframes pulseTrend {
+    0%, 100% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.05); opacity: 0.95; }
+}
+
+.pulse-animation {
+    animation: pulseTrend 2.5s infinite ease-in-out;
+}
+
