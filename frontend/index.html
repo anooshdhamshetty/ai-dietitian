@@ -9,7 +9,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-   <link rel="stylesheet" href="styles.css" />
+    <link rel="stylesheet" href="/static/styles.css" />
 </head>
 
 <body>
@@ -213,6 +213,30 @@
                     </div>
                 </div>
 
+                <!-- BMI Health Insights Widget -->
+                <div class="dash-card" id="bmi-card">
+                    <h3 class="dash-card-title">🏃 Health Score</h3>
+                    <div id="bmi-content" class="bmi-content">
+                        <div class="empty-state" style="padding: 0.5rem 0;">Complete your profile to calculate BMI.</div>
+                    </div>
+                </div>
+
+                <!-- Nutrition Journey Widget -->
+                <div class="dash-card" id="journey-card">
+                    <h3 class="dash-card-title">🏅 Nutrition Journey</h3>
+                    <div id="journey-content" class="journey-content">
+                        <div class="empty-state" style="padding: 0.5rem 0;">Log a meal to start your journey.</div>
+                    </div>
+                </div>
+
+                <!-- AI Forecast Widget -->
+                <div class="dash-card" id="forecast-card">
+                    <h3 class="dash-card-title">🔮 AI Forecast</h3>
+                    <div id="forecast-content" class="forecast-content">
+                        <div class="empty-state" style="padding: 0.5rem 0;">Log a meal to see your AI Forecast.</div>
+                    </div>
+                </div>
+
                 <!-- Meal Swap Suggestion Widget (Moved to end) -->
                 <div class="dash-card swap-suggestion-card" id="swap-suggestion-card">
                     <h3 class="dash-card-title" style="color: var(--clr-primary); display: flex; align-items: center; gap: 0.5rem;">
@@ -386,7 +410,7 @@
         </section>
     </main>
 
-   <script src="app.js"></script>
+    <script src="/static/app.js"></script>
 </body>
 
 </html>
